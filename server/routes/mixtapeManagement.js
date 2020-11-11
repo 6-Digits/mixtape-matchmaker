@@ -31,12 +31,14 @@ router.get('/uid/:id', async (req, res) => {
 		if (!mixtapes) {
 			return res.status(404).send("No mixtapes found.");
 		}
+		console.log(mixtapes);
 		let requests = mixtapes.map((mixtape) => {
+			//console.log(mixtape)
 			return new Promise(async (resolve) => {
 				await songs.find({ _id: { $in: mixtape.songList } }).then(async (songs) => {
-					await comments.find({ _id: { $in: mixtape.comments } }).then((comment) => {
-						mixtape['songList'] = songs;
-						mixtape['comments'] = comment;
+					mixtape['songList'] = songs ? songs : [];
+					await comments.find({ _id: { $in: mixtape.comments } }).then((comments) => {
+						mixtape['comments'] = comments ? comments : [];
 						resolve(mixtape);
 					}).catch((error) => {
 						console.log(error)
@@ -64,7 +66,7 @@ router.get('/uid/:id', async (req, res) => {
 
 // Gets a list of mixtapes from the database based their view count
 router.get('/popular', async (req, res) => {
-	await mixtapes.find().sort({ views: -1 }).limit(20).then((mixtapes) => {
+	await mixtapes.find({public : true}).sort({ views: -1 }).limit(20).then((mixtapes) => {
 		//console.log(mixtapes);
 		if (!mixtapes) {
 			return res.status(404).send("No mixtapes found.");
@@ -72,9 +74,9 @@ router.get('/popular', async (req, res) => {
 		let requests = mixtapes.map((mixtape) => {
 			return new Promise(async (resolve) => {
 				await songs.find({ _id: { $in: mixtape.songList } }).then(async (songs) => {
-					await comments.find({ _id: { $in: mixtape.comments } }).then((comment) => {
-						mixtape['songList'] = songs;
-						mixtape['comments'] = comment;
+					mixtape['songList'] = songs ? songs : [];
+					await comments.find({ _id: { $in: mixtape.comments } }).then((comments) => {
+						mixtape['comments'] = comments ? comments : [];
 						resolve(mixtape);
 					}).catch((error) => {
 						console.log(error)
@@ -102,7 +104,7 @@ router.get('/popular', async (req, res) => {
 
 // Gets a list of mixtapes from the database based their view count
 router.get('/likes', async (req, res) => {
-	await mixtapes.find().sort({ views: -1 }).limit(20).then((mixtapes) => {
+	await mixtapes.find({public : true}).sort({ views: -1 }).limit(20).then((mixtapes) => {
 		//console.log(mixtapes);
 		if (!mixtapes) {
 			return res.status(404).send("No mixtapes found.");
@@ -110,9 +112,9 @@ router.get('/likes', async (req, res) => {
 		let requests = mixtapes.map((mixtape) => {
 			return new Promise(async (resolve) => {
 				await songs.find({ _id: { $in: mixtape.songList } }).then(async (songs) => {
-					await comments.find({ _id: { $in: mixtape.comments } }).then((comment) => {
-						mixtape['songList'] = songs;
-						mixtape['comments'] = comment;
+					mixtape['songList'] = songs ? songs : [];
+					await comments.find({ _id: { $in: mixtape.comments } }).then((comments) => {
+						mixtape['comments'] = comments ? comments : [];
 						resolve(mixtape);
 					}).catch((error) => {
 						console.log(error)
@@ -204,10 +206,32 @@ router.get('/viewMixtape/id/:id', async (req, res) => {
 });
 
 // Creates a mixtape in the database
-router.post('/createMixtape/id/:id', verifyToken, async (req, res) => {
+router.post('/createMixtape/uid/:uid', /*verifyToken,*/ async (req, res) => {
 	await mixtapes.create({
-		owner: req.params.id,
+		owner: req.params.id
 	}).then(async (result) => {
+		if (!result) {
+			return res.status(404).send("There is a problem with creating the mixtape.");
+		}
+		return res.status(200).send(result);
+	}).catch((error) => {
+		console.log(error);
+		return res.status(500).send("There is a problem with the database.");
+	});
+});
+
+// Creates a mixtape in the database
+router.post('/updateMixtape/id/:id', /*verifyToken,*/ async (req, res) => {
+	await mixtapes.findByIdAndUpdate(req.params.id, {
+		name: req.body.name,
+		description: req.body.description,
+		public: req.body.public,
+		views: req.body.views,
+		songList: req.body.songList,
+		hearts: req.body.hearts,
+		comments: req.body.comments,
+		match: req.body.match
+	}, {new: true}).then(async (result) => {
 		if (!result) {
 			return res.status(404).send("There is a problem with creating the mixtape.");
 		}

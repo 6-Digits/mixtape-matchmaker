@@ -43,21 +43,28 @@ const useStyles = makeStyles((theme)=>({
 	}
 }));
 
-const popularPlaylists = Array(20).fill('Popular Tape').map((x, i) => ({
-	title: x + ' ' + i,
-	thumbnail: "https://i.kym-cdn.com/entries/icons/original/000/029/079/hellothere.jpg",
-	editable: false
-}));
+const popConst = Array(20).fill('Popular Tape').map((x, i) => {
+	return null;
+});
 
-const likedPlaylists = Array(20).fill('Liked Tape').map((x, i) => ({
-	title: x + ' ' + i,
-	thumbnail: "https://i.kym-cdn.com/entries/icons/facebook/000/028/875/cover4.jpg",
-	editable: false
-}));
+const likeConst = Array(20).fill('Liked Tape').map((x, i) => {
+	return null;
+});
 
 function Home({user, setUser}) {
 	const classes = useStyles();
+
+	const [popularPlaylists, setPopularPlaylists] = useState(likeConst);
+	const [likedPlaylists, setLikedPlaylists] = useState(popConst);
 	
+	const fetchPopularPlaylists = () => {
+		setPopularPlaylists(likeConst);
+	};
+
+	const fetchLikedPlaylists = () => {
+		setLikedPlaylists(popConst);
+	};
+
 	return (
 		<div>
 			<NavigationBar setUser={setUser} user={user} pageName='Home'></NavigationBar>
@@ -68,13 +75,13 @@ function Home({user, setUser}) {
 					Popular Playlists
 				</Typography>
 				
-				<PlaylistsContainer height={700} playlists={popularPlaylists} />
+				<PlaylistsContainer height={700} playlists={popularPlaylists} user={user} fetchPlaylists={fetchPopularPlaylists} />
 				
 				<Typography variant="h3" className={classes.likedTitle}>
 					Liked Playlists
 				</Typography>
 				
-				<PlaylistsContainer height={700} playlists={likedPlaylists} />
+				<PlaylistsContainer height={700} playlists={likedPlaylists} user={user} fetchPlaylists={fetchLikedPlaylists}/>
 				
 			</Grid>
 		</div>

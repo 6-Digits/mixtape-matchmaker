@@ -11,7 +11,7 @@ let mixtapeSchema = new Schema({
         default: ""
     },
     public: {
-        type: String,
+        type: Boolean,
         default: false
     },
     views: {
@@ -19,8 +19,8 @@ let mixtapeSchema = new Schema({
         default: 0
     },
     songList: {
-        type: Array,
-        default: 0
+        type: Schema.Types.Array,
+        default: []
     },
     owner: {
         type: Schema.Types.ObjectId,
