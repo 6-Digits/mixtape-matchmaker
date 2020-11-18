@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { makeStyles } from '@material-ui/core/styles';
-import { Avatar, Dialog, DialogActions, Button, DialogTitle, Typography, Grid, Container, TextField, Box, Link, Card, ButtonBase, CardMedia, CardContent, FormControlLabel, Switch } from '@material-ui/core';
-import { FavoriteBorder as FavoriteBorderIcon, Visibility as VisibilityIcon, Send as SendIcon } from '@material-ui/icons';
+import { Avatar, Dialog, DialogActions, Button, DialogTitle, DialogContent, DialogContentText, Typography, Grid, Container, TextField, Box, Link, Card, ButtonBase, CardMedia, CardContent, FormControlLabel, Switch } from '@material-ui/core';
+import { FavoriteBorder as FavoriteBorderIcon, Visibility as VisibilityIcon, Send as SendIcon, Delete as DeleteIcon} from '@material-ui/icons';
 import { Media, Player, utils } from 'react-media-player'
 import Playlist from "../modules/Playlist";
 import PlayerControls from "./PlayerControls";
@@ -111,55 +111,109 @@ const useStyles = makeStyles((theme) => ({
 	},
 	cardMedia: {
 		maxHeight: 180,
+		padding: 0
 	},
 	cardContent: {
 		textAlign: "left",
+		padding: "0.1rem"
 	},
 	cardAction: {
 		display: 'block',
 		maxWidth: 300,
 		maxHeight: 250,
+	},
+	cardTitle: {
+		textAlign: "center",
+		overflowX: "auto"
+	},
+	loginError: {
+		color: theme.palette.error.main,
+		fontSize: '1rem',
+		textAlign: 'center',
+		marginBottom: '1rem'
+	},
+	deleteButton: {
+		borderRadius: 0
+	},
+	deleteIcon: {
+		height: '100%',
+		width: '100%'
 	}
 }));
 
 const defaultDesc = 'I hope my classicist friends will forgive me if I abbreviate ‘mimeme’ to ‘meme.’" (The suitable Greek root was mim-, meaning "mime" or "mimic." The English suffix -eme indicates a distinctive unit of language structure, as in "grapheme," "lexeme," and "phoneme.") "Meme" itself, like any good meme, caught on fairly quickly, spreading from person to person as it established itself in the language.';
+const api = 'http://localhost:42069/api';
+const errorDefault = "Sorry! We could not save to the playlist. You are either disconnected from the internet or the servers are down. Please save your work using external software and try again later. Click save again to close the playlist.";
+const errorTitleLength = "The playlist title you have entered is either empty or too long (exceeds 255 characters). Please enter a valid playlist title or click save again to close.";
+const errorDescription = "The description of your playlist cannot be empty! Please add a description or click save again to close.";
 
-function ViewPlaylist({editable, shareable, playlist, updatePlaylists}) {
+
+function ViewPlaylist({editable, shareable, playlist, fetchPlaylists, user}) {
+	
 	const importedSongs = playlist ? playlist['songList'] : playlistData['songs'];
 	const importedDesc = playlist ? playlist['description'] : defaultDesc;
 	const importedThumbnail = playlist ?  playlist['songList'] ? playlist['songList'][0] ? playlist['songList'][0]['imgUrl'] : placeholder : placeholder : placeholder;
 	const importedLikeCount = playlist ? playlist['hearts'] : 420;
 	const importedComments = playlistData['comments'];
-	const importedViewCount = playlist ? playlist['view'] : 2020;
-	const importedAuthor = playlist ? playlist['owner'] : "X Æ A-13";
+	const importedViewCount = playlist ? playlist['view'] ? playlist['view'] : 0 : 0;
+	const importedAuthor = playlist ? playlist['owner'] : null;
 	const importedName = playlist ? playlist['name'] : "Ayyy Lmao";
+	const importPublic = playlist ? playlist['public'] ? playlist['public'] : false : false;
 
 	const classes = useStyles();
+	const [error, setError] = useState(false);
+	const [changed, setChanged] = useState(false);
+	const [errorMsg, setErrorMsg] = useState(errorDefault);
 	const [open, setOpen] = useState(false);
-	const [checkedPublic, setCheckedPublic] = useState(true);
+	const [checkedPublic, setCheckedPublic] = useState(importPublic);
 	const [description, setDescription] = useState(importedDesc);
 	const [viewCount, setViewCount] = useState(importedViewCount);
 	const [likeCount, setLikeCount] = useState(importedLikeCount);
+	const [liked, setLiked] = useState(false);
 	const [thumbnail, setThumbnail] = useState(importedThumbnail);
 	const [playlistName, setPlaylistName] = useState(importedName);
-	const [playlistAuthor, setPlaylistAuthor] = useState(importedAuthor);
+	const [profileImage, setProfileImage] = useState("https://i.kym-cdn.com/entries/icons/original/000/029/079/hellothere.jpg");
+	const [playlistAuthor, setPlaylistAuthor] = useState(null);
 	const [songs, setSongs] = useState(importedSongs);
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [currentSong, setCurrentSong] = useState(songs[currentIndex]);
 	const [comments, setComments] = useState(importedComments);
+	const [deleteOpen, setDeleteOpen] = useState(false);
+		
+	const handleOpenDeleteDialog = () => {
+		setDeleteOpen(true);
+	};
+	const handleCloseDeleteDialog = () => {
+		setDeleteOpen(false);
+	};
 	
 	shareable = editable ? editable : null;
-	editable = editable ? editable : null;
 	
 	useEffect(() => {
 		setCurrentSong(songs[currentIndex]);
-		if(playlist) {
+		if(!playlistAuthor) {
 			fetchAuthor();
 		}
 	}, [currentIndex]);
 
-	const fetchAuthor = () => {
-		
+	const fetchAuthor = async() => {
+		let userID = importedAuthor;
+		if(userID){
+			let requestOptions = {
+				method: 'GET',
+				headers: {'Content-Type': 'application/json'}
+			};
+			let response = await fetch(api + `/profile/id/${userID}`, requestOptions);
+			if(response.status === 200) {
+				let data = await response.json();
+				setPlaylistAuthor(data['userName']);
+				setProfileImage(data['imgSrc']);
+			} else {
+				setPlaylistAuthor('User not found');
+			}
+		} else {
+			setPlaylistAuthor('User not found');
+		}
 	  };
 	
 	const handleOpen = () => {
@@ -172,6 +226,8 @@ function ViewPlaylist({editable, shareable, playlist, updatePlaylists}) {
 	
 	const handleCheckedPublic = (event) => {
 		setCheckedPublic(event.target.checked);
+		setChanged(true);
+		setError(false);
 	};
 	
 	const handleCurrentIndex = (value) => {
@@ -185,18 +241,131 @@ function ViewPlaylist({editable, shareable, playlist, updatePlaylists}) {
 			setCurrentIndex(value);
 		}
 	}
+
+	const savePlaylist = async() => {
+		if(error){
+			alert("saved is clicked");
+			handleClose();
+		}
+		if(playlist && changed){
+			if(!playlistName || playlistName.length > 255 || playlistName.length === 0) {
+				setError(true);
+				setErrorMsg(errorTitleLength);
+			} else if(!description || description.length === 0){
+				setError(true);
+				setErrorMsg(errorDescription);
+			} else {
+				let playlistID = playlist['_id'];
+				let playlistData = {
+					name: playlistName,
+					description: description,
+					view: viewCount,
+					match: false,
+					hearts: likeCount,
+					comments: [],
+					songList: songs.map((song) => {
+						return song['_id'];
+					}),
+					public: checkedPublic
+
+				};
+				let requestOptions = {
+					method: 'POST',
+					headers: {'Content-Type': 'application/json'},
+					body: JSON.stringify(playlistData)
+				};
+				let response = await fetch(api + `/mixtape/updateMixtape/id/${playlistID}`, requestOptions);
+				if(response.status === 200) {
+					let data = await response.json();
+					setChanged(false);
+					handleClose();
+				} else {
+					alert(response.status);
+					setErrorMsg(errorDefault);
+					setError(true);
+				}
+			}
+		} else {
+			handleClose();
+		}
+	};
+	
+	const descriptionChange = (event) => {
+		setDescription(event.target.value);
+		setError(false);
+		setChanged(true);
+	};
+
+	const playlistNameChange = (event) => {
+		setPlaylistName(event.target.value);
+		setError(false);
+		setChanged(true);
+	};
+
+	const deletePlaylist = async() => {
+		let userToken = localStorage.getItem('userToken');
+		if(playlist && deleteOpen && userToken) {
+			let playlistID = playlist['_id'];
+			let requestOptions = {
+				method: 'POST',
+				headers: {'Content-Type': 'application/json', 'x-access-token': userToken},
+			};
+			let response = await fetch(api + `/mixtape/deleteMixtape/id/${playlistID}`, requestOptions);
+			if(response.status === 200) {
+				let data = await response.json();
+				fetchPlaylists(userToken, user);
+				handleCloseDeleteDialog();
+			} else {
+				alert(`Failed to delete playlist with error status: ${response.status}`);
+				handleCloseDeleteDialog();
+			}
+		} else {
+			alert("Failed to delete playlist because the playlist you've selected doesn't exist!");
+			handleCloseDeleteDialog();
+		}
+	};
+
 	
 	return (
 		<div className={classes.container}>
 			<Card className={classes.root}>
-				<ButtonBase className={classes.cardAction} onClick={handleOpen}>
-					<CardMedia component='img' className={classes.cardMedia} image={thumbnail} />
+				<div className={classes.cardAction}>
+					<Button className={classes.cardMedia}>
+						<CardMedia component='img' className={classes.cardMedia} image={thumbnail} onClick={handleOpen}/>
+					</Button>
 					<CardContent className={classes.cardContent}>
-						<Typography variant='h6'>{playlistName}</Typography>
+						{editable ? 
+						<Grid direction="row" container justify="space-between" alignItems="center">
+							<Grid item xs={9}><Typography variant='h6' className={classes.cardTitle}>{playlistName}</Typography></Grid>
+							<Grid item xs={3}><Button className={classes.deleteButton} onClick={handleOpenDeleteDialog}><DeleteIcon className={classes.deleteIcon}/></Button></Grid>
+						</Grid>
+						: <Typography variant='h6' className={classes.cardTitle}>{playlistName}</Typography>}
 					</CardContent>
-				</ButtonBase>
+				</div>
 			</Card>
-			
+
+			{editable ? 
+				<Dialog open={deleteOpen} onClose={handleCloseDeleteDialog} aria-labelledby="form-dialog-title">
+					<DialogTitle id="form-dialog-title" >Confirm Delete Playlist</DialogTitle>
+					<DialogContent>
+						<DialogContentText>
+							{`Are you sure about deleting the playlist '${playlistName}'?`}
+						</DialogContentText>
+					</DialogContent>
+					<DialogActions>
+					<Button onClick={handleCloseDeleteDialog} color="secondary" className={classes.button}
+				variant="contained">
+						Cancel
+					</Button>
+					<Button onClick={deletePlaylist} color="primary" className={classes.button}
+				variant="contained">
+						Yes, please delete this playlist
+					</Button>
+					</DialogActions>
+				</Dialog>
+				: null 
+			}
+
 			<Dialog fullWidth={true} maxWidth="xl" className={classes.modal} open={open} onClose={handleClose} aria-labelledby="form-dialog-title">
 				
 				<Grid container direction="row" justify="space-between" alignItems="center">
@@ -206,7 +375,7 @@ function ViewPlaylist({editable, shareable, playlist, updatePlaylists}) {
 
 					<Grid item xs={12} sm={1} className={classes.importGrid}>
 						<DialogActions>
-							<Button variant="contained" onClick={handleClose} color="secondary" className={classes.cancel}>
+							<Button variant="contained" onClick={editable ? savePlaylist : handleClose } color="secondary" className={classes.cancel}>
 								{ editable ? "Save" : "Exit" }
 							</Button>
 						</DialogActions>
@@ -235,14 +404,14 @@ function ViewPlaylist({editable, shareable, playlist, updatePlaylists}) {
 					<Grid container item xs={12} sm={6}>
 						<Playlist 
 						editable={editable} draggable={editable} shareable={shareable} 
-						songs={importedSongs} currentIndex={currentIndex} 
-						handleCurrentIndex={handleCurrentIndex} />
+						songs={songs} setSongs={setSongs} currentIndex={currentIndex}
+						handleCurrentIndex={handleCurrentIndex} setChanged={setChanged} />
 					</Grid>
 				</Grid>
 				
 				<Grid container 
 					direction="row"
-					justify="flex-start"
+					justify="center"
 					alignItems="center"
 					spacing={1}
 					className={classes.descriptionBox}>
@@ -264,13 +433,13 @@ function ViewPlaylist({editable, shareable, playlist, updatePlaylists}) {
 						</Grid> : null }
 					</Grid>
 					<Grid item xs={1}>
-						<Avatar variant="rounded" className={classes.profileImg} src={"https://i.kym-cdn.com/entries/icons/original/000/029/079/hellothere.jpg"}></Avatar>
+						<Avatar variant="rounded" className={classes.profileImg} src={profileImage}></Avatar>
 					</Grid>
 					<Grid item xs={2}  
 						container
 						direction="column"
 						justify="center"
-						alignItems="center"
+						alignItems="flex-start"
 						className={classes.playlistAuthor}>
 						
 						{editable ? 
@@ -280,7 +449,8 @@ function ViewPlaylist({editable, shareable, playlist, updatePlaylists}) {
 						id="playlistTitle"
 						label="Playlist Title"
 						name="playlistTitle"
-						defaultValue={playlistName}
+						value={playlistName}
+						onChange={playlistNameChange}
 						/>
 						:
 						<Grid item xs={12}> <Typography variant="h4">{playlistName}</Typography> </Grid>
@@ -292,19 +462,21 @@ function ViewPlaylist({editable, shareable, playlist, updatePlaylists}) {
 						<TextField
 						fullWidth
 						multiline
+						rows={5}
 						variant="outlined"
 						margin="normal"
 						id="playlistDescription"
 						label="Playlist Description"
 						name="playlistDescription"
-						defaultValue={description}
+						value={description}
+						onChange={descriptionChange}
 						/>
 						:
 						<Typography variant="h6">{description}</Typography>
 						}
 					</Grid>
 				</Grid>
-				
+				{error ? <div className={classes.loginError}>{errorMsg}</div> : null}
 				<Grid
 					container
 					justify="space-between"

@@ -4,6 +4,7 @@ import { Search as SearchIcon, Sort as SortIcon, Add as AddIcon} from '@material
 import { fade, makeStyles } from '@material-ui/core/styles';
 import NavigationBar from '../modules/NavigationBar';
 import PlaylistsContainer from "../modules/PlaylistsContainer";
+import { v4 as uuidv4 } from 'uuid';
 
 const useStyles = makeStyles((theme) => ({
 	container: {
@@ -95,6 +96,13 @@ function MyPlaylists(props) {
 		if(response.status === 200) {
 			let data = await response.json();
 			//alert(JSON.stringify(data));
+			data = data.map((dict, index) => {
+				dict['songList'] = dict['songList'].map((song, i) => {
+					song['uuid'] = uuidv4() + uuidv4();
+					return song;
+				});
+				return dict;
+			});
 			setMyPlaylists(data);
 			setPlaylistCache(data);
 		} else {
@@ -125,7 +133,7 @@ function MyPlaylists(props) {
 
 	return (
 		<div className={classes.page}>
-			<NavigationBar setUser={props.setUser} pageName='My Playlists'></NavigationBar>
+			<NavigationBar setUser={props.setUser} user={props.user} pageName='My Playlists'></NavigationBar>
 			
 			<Grid container direction="row" justify="center" alignItems="center" fullWidth className={classes.container}>
 				<Typography variant="h2">

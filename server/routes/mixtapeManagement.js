@@ -208,7 +208,7 @@ router.get('/viewMixtape/id/:id', async (req, res) => {
 // Creates a mixtape in the database
 router.post('/createMixtape/uid/:uid', /*verifyToken,*/ async (req, res) => {
 	await mixtapes.create({
-		owner: req.params.id
+		owner: req.params.uid
 	}).then(async (result) => {
 		if (!result) {
 			return res.status(404).send("There is a problem with creating the mixtape.");
@@ -244,7 +244,7 @@ router.post('/updateMixtape/id/:id', /*verifyToken,*/ async (req, res) => {
 
 // Deletes a mixtape in the database
 router.post('/deleteMixtape/id/:id', verifyToken, async (req, res) => {
-	await mixtapes.remove({ owner: req.params.id }).then(async (result) => {
+	await mixtapes.findByIdAndDelete(req.params.id).then(async (result) => {
 		if (!result) {
 			return res.status(404).send("There is a problem with removing the mixtape.");
 		}
