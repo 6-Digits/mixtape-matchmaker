@@ -246,7 +246,6 @@ function ViewPlaylist({editable, shareable, playlist, fetchPlaylists, user, remo
 
 	const savePlaylist = async() => {
 		if(error){
-			alert("saved is clicked");
 			handleClose();
 		}
 		if(playlist && changed){
