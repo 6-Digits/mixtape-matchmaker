@@ -114,8 +114,8 @@ function SearchBar({editable, search, setSearch, local, filterSongs, addSong}) {
             <InputBase
                 ref={anchorRef}
                 aria-describedby={id}
-                value={typed}
-                onChange={local ? filterSongs : onSearch}
+                value={editable ? typed : search}
+                onChange={editable ? onSearch : filterSongs}
                 placeholder={editable ? "Songs to add..." : "Search playlist song..."}
                 classes={{
                         root: classes.inputRoot,
