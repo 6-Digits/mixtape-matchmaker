@@ -91,12 +91,12 @@ const useStyles = makeStyles((theme) => ({
 		marginTop: '1rem',
 		padding: "1rem 1rem 1rem 1rem",
 		borderRadius: '0.5rem',
-		backgroundColor: theme.palette.text.primary,
-		color: theme.palette.background.default
+		backgroundColor: theme.palette.background.paper,
+		// color: theme.palette.background.default
 	},
 	commentBox: {
 		width:'95%',
-		height: '40vh',
+		maxHeight: '40vh',
 		overflowY: 'auto',
 	},
 	messageText: {
@@ -293,6 +293,13 @@ function ViewPlaylist({editable, shareable, playlist, fetchPlaylists, user, remo
 					setPlaylists(playlists.map(element=> {
 						if(element['_id'] == playlistID) {
 							playlistData['songList'] = songs;
+							let totalLength = 0;
+							playlistData['songList'].forEach((song, i) => {
+								if(song['duration']){
+									totalLength += song['duration'];
+								}
+							});
+							playlistData['duration'] = totalLength;
 							return playlistData;
 						}
 						return element;
@@ -585,31 +592,6 @@ function ViewPlaylist({editable, shareable, playlist, fetchPlaylists, user, remo
 					direction="column"
 					className={classes.commentSection}
 					fullWidth>
-					<Box
-						className={classes.commentBox}>
-						{
-							comments.map((comment, index) => {
-								return( 
-								<Grid
-									container 
-									xs={12}
-									direction="column"
-									justify="flex-start"
-									alignItems="flex-start"
-									spacing={0}
-									className={classes.comment}>
-									<Grid item xs={12}>
-										<Typography disableTypography className={classes.messageText}>
-										<Link>{comment.name}</Link>{`: ${comment.text}`}</Typography>
-									</Grid>
-									<Grid item xs={12}>
-										<Typography disableTypography className={classes.messageTS}>{comment.date}</Typography>
-									</Grid>
-								</Grid>
-								);
-							})
-						}
-					</Box>
 					<Grid
 						container
 						justify="center"
@@ -638,6 +620,32 @@ function ViewPlaylist({editable, shareable, playlist, fetchPlaylists, user, remo
 							</Button>
 						</Grid>
 					</Grid>
+					<Box
+						className={classes.commentBox}>
+						{
+							comments ?
+							comments.map((comment, index) => {
+								return( 
+								<Grid
+									container 
+									xs={12}
+									direction="column"
+									justify="flex-start"
+									alignItems="flex-start"
+									spacing={0}
+									className={classes.comment}>
+									<Grid item xs={12}>
+										<Typography disableTypography className={classes.messageText}>
+										<Link>{comment.name}</Link>{`: ${comment.text}`}</Typography>
+									</Grid>
+									<Grid item xs={12}>
+										<Typography disableTypography className={classes.messageTS}>{comment.date}</Typography>
+									</Grid>
+								</Grid>
+								);
+							}) : null
+						}
+					</Box>
 				</Grid>
 			</Dialog>
 		</div>
