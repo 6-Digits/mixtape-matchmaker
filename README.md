@@ -86,3 +86,12 @@ When liking another user's profile after matching with them, the other user must
 ### Google API
 
 The website heavily utilizes many of Google's APIs such as YouTube, Maps, and Gmail. There have recently been many disruptions on Google's servers which may cause some of the services on the site to fail. If you encounter a problem, please first visit https://downdetector.com/status/google/ to check if it is a problem with Google and not the website. 
+
+### Preloaded Accounts
+
+TAs are able to access some preloaded accounts if they want. 
+```
+usename: dummy[n]@test.com
+passwod: 123456789
+```
+for n = 0, 1, 2, ...,10. Ex: dummy0@test.com, dummy1@test.com, etc.
