@@ -66,7 +66,7 @@ Start the client
 ```bash
 $ npm start
 ```
-The client will be started on port http://localhost:8080. This is what will be used to access the website. 
+The client will be started on port http://localhost:8080. This is what will be used to access the website.  
 
 ## Notes
 
