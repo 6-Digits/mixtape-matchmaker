@@ -91,7 +91,7 @@ The website heavily utilizes many of Google's APIs such as YouTube, Maps, and Gm
 
 TAs are able to access some preloaded accounts if they want. 
 ```
-usename: dummy[n]@test.com
-passwod: 123456789
+username: dummy[n]@test.com
+password: 123456789
 ```
 for n = 0, 1, 2, ...,10. Ex: dummy0@test.com, dummy1@test.com, etc.
